@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard</title>
+     <link rel="stylesheet" href="../static/student1.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <h2>Track Bus Location</h2>
+
+        <!-- Bus list with Track buttons -->
+        {% for bus in buses %}
+        <div class="bus-list-item">
+            <span>{{ bus.bus_no }} – {{ bus.route }}</span>
+            <button onclick="trackBus({{ bus.id }})">Track</button>
+        </div>
+        {% endfor %}
+
+        <!-- Driver info -->
+        <h3 id="driver"></h3>
+
+        <!-- Google Map -->
+        <div id="map"></div>
+
+        <!-- Google Maps JS -->
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCUA_cVJHRvUBTFeYtTUqR7AADq8ZxQmMI"></script>
+        <script>
+            let map;
+            let marker;
+            let currentBusId = null;
+
+            function initMap() {
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: {lat: 28.6139, lng: 77.2090}, // Default center
+                    zoom: 12
+                });
+            }
+
+            function trackBus(busId) {
+                currentBusId = busId;
+                fetch(`/api/bus-location/${busId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.error){
+                            document.getElementById('driver').innerText = data.error;
+                            if(marker) marker.setMap(null);
+                        } else {
+                            document.getElementById('driver').innerText = "Driver: " + data.driver_name;
+                            const pos = {lat: parseFloat(data.lat), lng: parseFloat(data.lng)};
+                            if(!marker){
+                                marker = new google.maps.Marker({position: pos, map: map, title: data.driver_name});
+                            } else {
+                                marker.setPosition(pos);
+                            }
+                            map.setCenter(pos);
+                        }
+                    });
+            }
+
+            // Auto-refresh every 5 seconds
+            setInterval(() => {
+                if(currentBusId !== null) {
+                    trackBus(currentBusId);
+                }
+            }, 5000);
+
+            window.onload = initMap;
+        </script>
+    </div>
+</body>
+</html>

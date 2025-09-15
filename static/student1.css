@@ -1,0 +1,116 @@
+/*
+  --- Base and Background Styles ---
+*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    color: #333;
+    background-color: #f0f2f5; /* A soft, light gray background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+/*
+  --- Dashboard Container ---
+*/
+.dashboard-wrapper {
+    background-color: #fff; /* Solid white background */
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); /* A subtle shadow */
+    width: 100%;
+    max-width: 800px;
+    box-sizing: border-box;
+}
+
+h2 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/*
+  --- Bus List and Track Buttons ---
+*/
+.bus-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fcfcfc;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid #3498db;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bus-list-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.bus-list-item span {
+    font-size: 1.1rem;
+    color: #444;
+    font-weight: 500;
+}
+
+.bus-list-item button {
+    background: #0077b6;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.bus-list-item button:hover {
+    background: #005f8a;
+}
+
+/*
+  --- Map and Info Display ---
+*/
+h3 {
+    font-size: 1.2rem;
+    font-style: italic;
+    color: #555;
+    margin-top: 25px;
+    text-align: center;
+}
+        
+#map {
+    height: 400px;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    margin-top: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard-wrapper {
+        padding: 20px;
+    }
+    .bus-list-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}

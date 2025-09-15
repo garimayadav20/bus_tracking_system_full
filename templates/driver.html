@@ -1,0 +1,206 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Driver Dashboard</title>
+    <link rel="stylesheet" href="../static/driver1.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h2>🚌 Driver Dashboard</h2>
+            <p>Real-time Bus Location Tracking System</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="bus_id">Bus ID</label>
+                <input type="number" id="bus_id" placeholder="Enter Bus ID">
+            </div>
+            <div class="input-group">
+                <label for="route_name">Route Name</label>
+                <input type="text" id="route_name" placeholder="Enter Route Name">
+            </div>
+            <button class="btn btn-primary" onclick="startTracking()">
+                🎯 Start Tracking
+            </button>
+        </div>
+
+        <div class="main-tracking-box">
+            <div class="tracking-header">
+                <h3 class="tracking-title">Bus Route Tracking</h3>
+                <div class="status-badge status-inactive" id="status-badge">
+                    Inactive
+                </div>
+            </div>
+
+            <div class="route-info">
+                <div class="info-card">
+                    <h4>🚌 Bus Information</h4>
+                    <p id="bus-info">No bus selected</p>
+                </div>
+                <div class="info-card">
+                    <h4>🛣️ Current Route</h4>
+                    <p id="route-info">No route active</p>
+                </div>
+            </div>
+
+            <div class="route-progress">
+                <h4 style="margin-bottom: 10px; color: #333;">Route Progress</h4>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-text" id="progress-text">0% Complete</div>
+            </div>
+
+            <div class="location-display" id="location-display">
+                <strong>📍 Current Location:</strong><br>
+                <span class="coordinates">Waiting for location data...</span>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="getCurrentLocation()" id="location-btn">
+                    📍 Get Current Location
+                </button>
+                <button class="btn btn-danger" onclick="stopTracking()" id="stop-btn" disabled>
+                    ⏹️ Stop Tracking
+                </button>
+            </div>
+
+            <div class="last-update" id="last-update">
+                No updates yet
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let watchId;
+        let updateCount = 0;
+
+        // Cache all DOM elements to avoid repeated queries
+        const els = {
+            busIdInput: document.getElementById('bus_id'),
+            routeNameInput: document.getElementById('route_name'),
+            statusBadge: document.getElementById('status-badge'),
+            busInfo: document.getElementById('bus-info'),
+            routeInfo: document.getElementById('route-info'),
+            stopBtn: document.getElementById('stop-btn'),
+            trackingBox: document.querySelector('.main-tracking-box'),
+            progressFill: document.getElementById('progress-fill'),
+            progressText: document.getElementById('progress-text'),
+            locationDisplay: document.getElementById('location-display'),
+            locationBtn: document.getElementById('location-btn'),
+            lastUpdate: document.getElementById('last-update')
+        };
+
+        // Helper function to update the location display with a clean template
+        const updateLocationUI = (position) => {
+            const { latitude, longitude, accuracy } = position.coords;
+            els.locationDisplay.innerHTML = `
+                <strong>📍 Current Location:</strong><br>
+                <span class="coordinates">
+                    Latitude: ${latitude.toFixed(6)}<br>
+                    Longitude: ${longitude.toFixed(6)}<br>
+                    Accuracy: ±${Math.round(accuracy)}m
+                </span>
+            `;
+        };
+
+        // Asynchronous function to handle fetching data to the server
+        const sendLocationData = async (data) => {
+            try {
+                const response = await fetch('/api/update-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                console.log('Location updated:', result.status);
+            } catch (err) {
+                console.error('Update failed:', err);
+            }
+        };
+
+        function startTracking() {
+            const busId = els.busIdInput.value;
+            const routeName = els.routeNameInput.value;
+            
+            if (!busId || !routeName) {
+                alert("Please enter Bus ID and Route Name.");
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            // Update UI for active state
+            els.statusBadge.textContent = 'Active';
+            els.statusBadge.className = 'status-badge status-active pulse';
+            els.busInfo.textContent = `Bus #${busId}`;
+            els.routeInfo.textContent = routeName;
+            els.stopBtn.disabled = false;
+            els.trackingBox.style.borderLeft = '5px solid #00b894';
+
+            // Start continuous location tracking
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    updateCount++;
+                    const progress = Math.min((updateCount * 2) % 100, 95);
+                    els.progressFill.style.width = progress + '%';
+                    els.progressText.textContent = `${progress}% Complete`;
+                    els.lastUpdate.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                    updateLocationUI(position);
+                    
+                    sendLocationData({
+                        bus_id: busId,
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                        route: routeName
+                    });
+                },
+                (error) => {
+                    els.locationDisplay.innerHTML = `<strong>❌ Error:</strong><br><span style="color: #d63031;">${error.message}</span>`;
+                },
+                { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+            );
+        }
+
+        function stopTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                // Reset UI to inactive state
+                els.statusBadge.textContent = 'Inactive';
+                els.statusBadge.className = 'status-badge status-inactive';
+                els.stopBtn.disabled = true;
+                els.trackingBox.style.borderLeft = 'none';
+                els.progressFill.style.width = '0%';
+                els.progressText.textContent = '0% Complete';
+                els.lastUpdate.textContent = 'Tracking stopped';
+            }
+        }
+
+        function getCurrentLocation() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+            els.locationBtn.textContent = '🔄 Getting Location...';
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    updateLocationUI(position);
+                    els.locationBtn.textContent = '📍 Get Current Location';
+                    els.lastUpdate.textContent = `Location retrieved: ${new Date().toLocaleTimeString()}`;
+                },
+                (error) => {
+                    els.locationDisplay.innerHTML = `<strong>❌ Error:</strong><br><span style="color: #d63031;">${error.message}</span>`;
+                    els.locationBtn.textContent = '📍 Get Current Location';
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+    </script>
+</body>
+</html>

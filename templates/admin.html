@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="..\static\admin1.css">
+  <style>
+    /* Add the CSS code provided above directly here for a quick test */
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <h2>Admin Dashboard</h2>
+    <form method="POST">
+      <label>Bus No:</label>
+      <input type="text" name="bus_no" required>
+      <label>Route:</label>
+      <input type="text" name="route" required>
+      <label>Driver Name:</label>
+      <input type="text" name="driver_name" required>
+      <button type="submit">Add Bus</button>
+    </form>
+    <h3>All Buses</h3>
+    <ul>
+      {% for bus in buses %}
+        <li>{{ bus.bus_no }} – {{ bus.route }} – Driver: {{ bus.driver_name }}</li>
+      {% endfor %}
+    </ul>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </div>
+</body>
+</html>
