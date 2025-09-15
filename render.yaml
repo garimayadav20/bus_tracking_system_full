@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: bus_tracking_system_full
+    env: python
+    plan: free
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python app.py collectstatic --noinput
+      python app.py
+    startCommand: "gunicorn bus_tracking_system_full.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: DEBUG
+        value: "False"
